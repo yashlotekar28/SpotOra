@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SpotOra — Smart Campus Parking</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy:   #0a0e1a;
+    --navy2:  #111827;
+    --navy3:  #1c2333;
+    --navy4:  #232d42;
+    --navy5:  #2a3550;
+    --gold:   #f5c842;
+    --gold2:  #e6b820;
+    --gold-soft: rgba(245,200,66,0.12);
+    --gold-glow: rgba(245,200,66,0.25);
+    --blue:   #3b82f6;
+    --blue2:  #2563eb;
+    --blue-soft: rgba(59,130,246,0.12);
+    --green:  #22c55e;
+    --green-soft: rgba(34,197,94,0.12);
+    --orange: #f97316;
+    --orange-soft: rgba(249,115,22,0.12);
+    --red:    #ef4444;
+    --red-soft: rgba(239,68,68,0.12);
+    --cyan:   #06b6d4;
+    --cyan-soft: rgba(6,182,212,0.12);
+    --text:   #f1f5f9;
+    --text2:  #94a3b8;
+    --text3:  #64748b;
+    --border: rgba(255,255,255,0.07);
+    --border2:rgba(255,255,255,0.12);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content:'';
+    position:fixed; top:-200px; left:-200px;
+    width:600px; height:600px;
+    background: radial-gradient(circle, rgba(245,200,66,0.05) 0%, transparent 70%);
+    pointer-events:none; z-index:0;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display:none; }
+  .screen.active { display:block; animation: fadeIn .3s ease; }
+  #screen-login.active { display:flex; flex-direction:column; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+
+  /* ── NAV ── */
+  nav {
+    position:sticky; top:0; z-index:100;
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+    padding:0 24px;
+    display:flex; align-items:center; justify-content:space-between;
+    height:64px;
+  }
+  .nav-s { background:rgba(10,14,26,0.92); }
+  .nav-g { background:rgba(7,11,20,0.95); }
+  .nav-brand { display:flex; align-items:center; gap:10px; }
+  .nav-logo {
+    width:38px; height:38px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:15px;
+  }
+  .nl-s { background:var(--gold); color:var(--navy); }
+  .nl-g { background:var(--blue);  color:#fff; }
+  .nav-title { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; color:var(--text); }
+  .nav-sub   { font-size:11px; color:var(--text2); margin-top:1px; }
+  .nav-right { display:flex; align-items:center; gap:10px; }
+  .nav-user  { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text2); }
+  .avatar {
+    width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:13px;
+  }
+  .av-s { background:var(--gold); color:var(--navy); }
+  .av-g { background:var(--blue);  color:#fff; }
+  .live-badge {
+    display:flex; align-items:center; gap:5px;
+    background:var(--green-soft); border:1px solid var(--green);
+    border-radius:20px; padding:4px 10px;
+    font-size:11px; color:var(--green);
+  }
+  .live-dot {
+    width:6px; height:6px; border-radius:50%; background:var(--green);
+    animation: blink 1.5s ease infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+  .btn-logout {
+    padding:6px 14px; border-radius:8px;
+    border:1px solid var(--border2); background:transparent;
+    color:var(--text2); font-size:12px; cursor:pointer; transition:all .2s;
+  }
+  .btn-logout:hover { border-color:var(--red); color:var(--red); }
+
+  /* ── LOGIN SCREEN ── */
+  #screen-login { min-height:100vh; }
+  .login-hero {
+    flex:1; display:flex; align-items:center; justify-content:center;
+    padding:40px 24px; position:relative;
+  }
+  .login-bg-pattern {
+    position:absolute; inset:0;
+    background-image:
+      repeating-linear-gradient(0deg,transparent,transparent 50px,rgba(255,255,255,0.015) 50px,rgba(255,255,255,0.015) 51px),
+      repeating-linear-gradient(90deg,transparent,transparent 50px,rgba(255,255,255,0.015) 50px,rgba(255,255,255,0.015) 51px);
+    pointer-events:none;
+  }
+  .login-card {
+    width:100%; max-width:440px;
+    background:var(--navy3); border:1px solid var(--border2);
+    border-radius:24px; padding:40px 36px; position:relative; z-index:1;
+    box-shadow:0 40px 80px rgba(0,0,0,0.5);
+    transition: border-color .4s;
+  }
+  .login-card.guard-mode { border-color: rgba(59,130,246,0.35); }
+
+  .login-brand { text-align:center; margin-bottom:28px; }
+  .login-brand-logo {
+    width:64px; height:64px; border-radius:18px; margin:0 auto 14px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:26px;
+    transition: background .4s, color .4s;
+  }
+  .lbl-s { background:var(--gold); color:var(--navy); }
+  .lbl-g { background:var(--blue);  color:#fff; }
+  .login-brand h1 {
+    font-family:'Syne',sans-serif; font-weight:800; font-size:28px; color:var(--text); margin-bottom:4px;
+  }
+  .login-brand p { font-size:13px; color:var(--text2); }
+
+  /* ── ROLE TOGGLE ── */
+  .role-toggle {
+    display:flex; background:var(--navy4); border:1px solid var(--border);
+    border-radius:12px; padding:4px; margin-bottom:28px; gap:4px;
+  }
+  .role-btn {
+    flex:1; padding:9px 12px; border-radius:9px; border:none; background:transparent;
+    color:var(--text2); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500;
+    cursor:pointer; transition:all .25s; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .rb-s.active { background:var(--gold); color:var(--navy); font-weight:700; }
+  .rb-g.active { background:var(--blue);  color:#fff;        font-weight:700; }
+
+  /* ── FORM FIELDS ── */
+  .field { margin-bottom:16px; }
+  .field label {
+    display:block; font-size:12px; font-weight:500; color:var(--text2);
+    margin-bottom:6px; letter-spacing:.5px; text-transform:uppercase;
+  }
+  .field input, .field select {
+    width:100%; padding:12px 16px;
+    background:var(--navy4); border:1px solid var(--border2);
+    border-radius:var(--radius-sm); color:var(--text); font-size:14px;
+    font-family:'DM Sans',sans-serif; outline:none; transition:border-color .2s;
+  }
+  .field input:focus { border-color:var(--gold); }
+  .field select option { background:var(--navy4); }
+  .btn-primary {
+    width:100%; padding:13px; border-radius:var(--radius-sm);
+    font-family:'Syne',sans-serif; font-weight:700; font-size:15px;
+    border:none; cursor:pointer; transition:all .2s; margin-top:8px;
+  }
+  .bp-s { background:var(--gold); color:var(--navy); }
+  .bp-s:hover { background:var(--gold2); transform:translateY(-1px); }
+  .bp-g { background:var(--blue); color:#fff; }
+  .bp-g:hover { background:var(--blue2); transform:translateY(-1px); }
+  .btn-primary:active { transform:translateY(0); }
+  .error-msg {
+    background:var(--red-soft); border:1px solid var(--red);
+    border-radius:8px; padding:10px 14px; font-size:13px; color:var(--red);
+    margin-bottom:14px; display:none;
+  }
+  .error-msg.show { display:block; }
+  .login-note { font-size:12px; color:var(--text3); text-align:center; margin-top:16px; line-height:1.6; }
+  .login-note a { color:var(--gold); text-decoration:none; }
+  .login-note a:hover { text-decoration:underline; }
+  .default-creds {
+    background:var(--cyan-soft); border:1px solid var(--cyan);
+    border-radius:8px; padding:10px 14px; font-size:12px; color:var(--cyan);
+    margin-top:12px; line-height:1.6;
+  }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.75);
+    z-index:200; display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--navy3); border:1px solid var(--border2);
+    border-radius:20px; padding:28px; max-width:480px; width:100%;
+    max-height:90vh; overflow-y:auto;
+    box-shadow:0 40px 80px rgba(0,0,0,.6);
+  }
+  .modal h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:20px; margin-bottom:6px; color:var(--text); }
+  .modal > p { font-size:14px; color:var(--text2); margin-bottom:20px; }
+  .modal-slot-id { font-family:'Syne',sans-serif; font-weight:800; font-size:32px; color:var(--orange); margin-bottom:6px; }
+  .modal-rows { margin-bottom:20px; }
+  .modal-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .modal-row:last-child { border:none; }
+  .modal-key { color:var(--text3); }
+  .modal-val { color:var(--text); font-weight:500; }
+  .modal-actions { display:flex; gap:10px; }
+  .btn-modal-cancel {
+    flex:1; padding:11px; border-radius:9px; border:1px solid var(--border2);
+    background:transparent; color:var(--text2); font-size:14px; cursor:pointer; transition:all .2s;
+  }
+  .btn-modal-cancel:hover { border-color:var(--text); color:var(--text); }
+  .btn-modal-confirm {
+    flex:1; padding:11px; border-radius:9px; border:none;
+    background:var(--green); color:#fff;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:14px; cursor:pointer; transition:all .2s;
+  }
+  .btn-modal-confirm:hover { background:#16a34a; }
+  .fields-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .fields-grid .field.full { grid-column:1/-1; }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    position:fixed; inset:0; background:rgba(10,14,26,0.9);
+    display:flex; align-items:center; justify-content:center; z-index:300;
+    flex-direction:column; gap:16px;
+  }
+  .loading-overlay.hidden { display:none; }
+  .spinner { width:40px; height:40px; border:3px solid var(--border2); border-top-color:var(--gold); border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+  .loading-text { font-size:14px; color:var(--text2); }
+
+  /* ── TOAST ── */
+  .toast {
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--navy3); border:1px solid var(--border2);
+    border-radius:10px; padding:12px 20px;
+    font-size:13px; color:var(--text); z-index:999;
+    opacity:0; transition:all .3s; pointer-events:none;
+    white-space:nowrap; box-shadow:0 8px 32px rgba(0,0,0,.4);
+  }
+  .toast.show  { opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.success { border-color:var(--green);  color:var(--green); }
+  .toast.error   { border-color:var(--red);    color:var(--red); }
+  .toast.info    { border-color:var(--blue);   color:var(--blue); }
+
+  /* ══════════ STUDENT APP ══════════ */
+  .bottom-nav {
+    position:fixed; bottom:0; left:0; right:0; z-index:100;
+    background:rgba(17,24,39,0.97); backdrop-filter:blur(20px);
+    border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-around;
+    padding:8px 0 12px;
+  }
+  .bnav-item {
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:6px 20px; border-radius:10px; cursor:pointer;
+    transition:all .2s; border:none; background:transparent;
+  }
+  .bnav-icon  { font-size:20px; line-height:1; }
+  .bnav-label { font-size:10px; color:var(--text3); transition:color .2s; }
+  .bnav-item.active .bnav-label { color:var(--gold); }
+  .bnav-item.active .bnav-icon  { filter:drop-shadow(0 0 6px var(--gold)); }
+
+  .s-page { display:none; }
+  .s-page.active { display:block; animation:fadeIn .25s ease; }
+  .app-container { max-width:960px; margin:0 auto; padding:28px 20px 100px; }
+
+  .page-header { margin-bottom:24px; }
+  .page-header h2 { font-family:'Syne',sans-serif; font-weight:700; font-size:22px; color:var(--text); }
+  .page-header p  { font-size:13px; color:var(--text2); margin-top:4px; }
+
+  .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px; }
+  .stat-card { background:var(--navy3); border:1px solid var(--border); border-radius:var(--radius); padding:16px; text-align:center; transition:transform .2s; }
+  .stat-card:hover { transform:translateY(-2px); }
+  .stat-num   { font-family:'Syne',sans-serif; font-weight:800; font-size:28px; margin-bottom:4px; }
+  .stat-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; }
+  .stat-card.green  .stat-num { color:var(--green); }
+  .stat-card.orange .stat-num { color:var(--orange); }
+  .stat-card.red    .stat-num { color:var(--red); }
+
+  .section-title {
+    font-family:'Syne',sans-serif; font-weight:600; font-size:13px;
+    color:var(--text2); letter-spacing:.5px; text-transform:uppercase;
+    margin-bottom:12px; display:flex; align-items:center; gap:8px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .legend-row { display:flex; gap:16px; margin-bottom:14px; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2); }
+  .legend-dot { width:10px; height:10px; border-radius:3px; }
+  .legend-dot.green  { background:var(--green); }
+  .legend-dot.orange { background:var(--orange); }
+  .legend-dot.red    { background:var(--red); }
+
+  .slot-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:24px; }
+  .slot-tile {
+    background:var(--navy3); border-radius:10px; padding:10px 6px; text-align:center;
+    border:1px solid var(--border); transition:all .2s; position:relative; overflow:hidden;
+    min-height:70px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  }
+  .slot-tile::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .slot-tile.available { border-color:rgba(34,197,94,0.3); }
+  .slot-tile.available::before { background:var(--green); }
+  .slot-tile.pending   { border-color:rgba(249,115,22,0.3); }
+  .slot-tile.pending::before   { background:var(--orange); }
+  .slot-tile.reserved  { border-color:rgba(239,68,68,0.3); }
+  .slot-tile.reserved::before  { background:var(--red); }
+  .slot-tile.mine { box-shadow:0 0 0 2px var(--gold); border-color:var(--gold); }
+  .slot-tile.mine::before { background:var(--gold); }
+  .slot-id { font-family:'Syne',sans-serif; font-weight:700; font-size:12px; color:var(--text); }
+  .slot-status-dot { width:7px; height:7px; border-radius:50%; }
+  .slot-tile.available .slot-status-dot { background:var(--green); }
+  .slot-tile.pending   .slot-status-dot { background:var(--orange); }
+  .slot-tile.reserved  .slot-status-dot { background:var(--red); }
+  .slot-tile.mine      .slot-status-dot { background:var(--gold); }
+
+  .booking-card { background:var(--navy3); border:1px solid var(--border2); border-radius:20px; padding:24px; margin-bottom:16px; }
+  .booking-card h3 { font-family:'Syne',sans-serif; font-weight:600; font-size:15px; margin-bottom:18px; color:var(--text); }
+
+  .slot-picker-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:16px; }
+  .slot-pick-tile {
+    border-radius:10px; padding:10px 4px; text-align:center;
+    border:1px solid var(--border); cursor:pointer;
+    min-height:64px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    transition:all .2s;
+  }
+  .slot-pick-tile.available { background:var(--navy4); border-color:rgba(34,197,94,0.3); }
+  .slot-pick-tile.available:hover { background:var(--green-soft); border-color:var(--green); transform:translateY(-2px); }
+  .slot-pick-tile.taken     { background:var(--navy4); opacity:.4; cursor:not-allowed; }
+  .slot-pick-tile.selected  { background:var(--gold-soft); border-color:var(--gold); box-shadow:0 0 0 2px var(--gold-glow); }
+  .slot-pick-id     { font-family:'Syne',sans-serif; font-weight:700; font-size:11px; color:var(--text); }
+  .slot-pick-status { font-size:9px; color:var(--text3); }
+  .slot-pick-tile.selected .slot-pick-id { color:var(--gold); }
+
+  .confirm-strip {
+    background:var(--gold-soft); border:1px solid var(--gold); border-radius:10px;
+    padding:12px 16px; margin-bottom:16px; display:none; align-items:center; justify-content:space-between;
+  }
+  .confirm-strip.show { display:flex; }
+  .confirm-strip span { font-size:13px; color:var(--gold); font-weight:500; }
+  .btn-confirm {
+    padding:10px 24px; border-radius:8px; background:var(--gold); color:var(--navy);
+    font-family:'Syne',sans-serif; font-weight:700; font-size:14px;
+    border:none; cursor:pointer; transition:all .2s; width:100%; margin-top:4px;
+  }
+  .btn-confirm:hover { background:var(--gold2); }
+
+  .receipt-card {
+    background:linear-gradient(135deg,var(--navy3) 0%,var(--navy4) 100%);
+    border:1px solid var(--gold); border-radius:20px; padding:28px; margin-bottom:16px;
+    position:relative; overflow:hidden;
+  }
+  .receipt-card::before {
+    content:'RECEIPT'; position:absolute; top:20px; right:-20px; transform:rotate(45deg);
+    background:var(--gold); color:var(--navy);
+    font-family:'Syne',sans-serif; font-weight:800; font-size:9px; padding:4px 28px; letter-spacing:2px;
+  }
+  .receipt-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .receipt-slot-badge {
+    width:56px; height:56px; border-radius:14px; background:var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:13px; color:var(--navy); text-align:center; line-height:1.2;
+  }
+  .receipt-title { font-family:'Syne',sans-serif; font-weight:700; font-size:18px; color:var(--text); }
+  .receipt-sub   { font-size:13px; color:var(--text2); margin-top:3px; }
+  .receipt-rows  { display:flex; flex-direction:column; gap:8px; }
+  .receipt-row   { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+  .receipt-row:last-child { border:none; }
+  .receipt-key { font-size:12px; color:var(--text3); }
+  .receipt-val { font-size:13px; font-weight:500; color:var(--text); }
+
+  .status-banner { border-radius:12px; padding:14px 18px; margin-bottom:14px; display:flex; align-items:center; gap:12px; }
+  .status-banner.pending  { background:var(--orange-soft); border:1px solid var(--orange); }
+  .status-banner.reserved { background:var(--green-soft);  border:1px solid var(--green); }
+  .status-banner.expired  { background:var(--red-soft);    border:1px solid var(--red); }
+  .status-icon { font-size:22px; }
+  .status-text h4 { font-size:14px; font-weight:600; margin-bottom:2px; }
+  .status-banner.pending  .status-text h4 { color:var(--orange); }
+  .status-banner.reserved .status-text h4 { color:var(--green); }
+  .status-banner.expired  .status-text h4 { color:var(--red); }
+  .status-text p { font-size:12px; color:var(--text2); }
+
+  .timer-section { margin-bottom:14px; }
+  .timer-label   { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .timer-label span { font-size:12px; color:var(--text2); }
+  .timer-countdown { font-family:'Syne',sans-serif; font-weight:800; font-size:20px; color:var(--orange); }
+  .timer-track { height:8px; background:var(--navy4); border-radius:4px; overflow:hidden; }
+  .timer-fill  { height:100%; background:var(--orange); border-radius:4px; transition:width 1s linear; }
+  .timer-fill.urgent { background:var(--red); animation:pulse .5s infinite alternate; }
+  @keyframes pulse { from{opacity:.7;} to{opacity:1;} }
+
+  .btn-cancel {
+    width:100%; padding:12px; border-radius:10px;
+    background:transparent; border:1px solid var(--red);
+    color:var(--red); font-size:14px; font-weight:500; cursor:pointer; transition:all .2s;
+  }
+  .btn-cancel:hover { background:var(--red-soft); }
+
+  .empty-state { text-align:center; padding:60px 20px; }
+  .empty-icon { font-size:48px; margin-bottom:16px; }
+  .empty-state h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:18px; color:var(--text); margin-bottom:8px; }
+  .empty-state p  { font-size:14px; color:var(--text2); margin-bottom:24px; }
+  .btn-go-book {
+    padding:12px 28px; border-radius:10px; background:var(--gold); color:var(--navy);
+    font-family:'Syne',sans-serif; font-weight:700; font-size:14px; border:none; cursor:pointer; transition:all .2s;
+  }
+  .btn-go-book:hover { background:var(--gold2); }
+
+  .profile-card { background:var(--navy3); border:1px solid var(--border2); border-radius:20px; padding:28px; margin-bottom:16px; text-align:center; }
+  .profile-avatar {
+    width:72px; height:72px; border-radius:50%; background:var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:26px; color:var(--navy); margin:0 auto 14px;
+  }
+  .profile-name  { font-family:'Syne',sans-serif; font-weight:700; font-size:20px; color:var(--text); margin-bottom:4px; }
+  .profile-id    { font-size:13px; color:var(--text2); }
+  .profile-badge { display:inline-block; margin-top:10px; padding:4px 14px; background:var(--gold-soft); border:1px solid var(--gold); border-radius:20px; font-size:12px; color:var(--gold); }
+  .info-list { list-style:none; }
+  .info-list li { display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-bottom:1px solid var(--border); font-size:14px; }
+  .info-list li:last-child { border:none; }
+  .info-list .key { color:var(--text2); }
+  .info-list .val { color:var(--text); font-weight:500; }
+
+  .info-box { background:var(--navy3); border:1px solid var(--border); border-radius:14px; padding:18px; }
+  .info-box-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:13px; }
+  .info-box-item span:first-child { color:var(--text2); display:block; margin-bottom:2px; }
+
+  /* ══════════ GUARD APP ══════════ */
+  .g-app-container { max-width:960px; margin:0 auto; padding:28px 20px 80px; }
+
+  .g-stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+  .g-stat-card {
+    background:var(--navy3); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 14px; position:relative; overflow:hidden; transition:transform .2s;
+  }
+  .g-stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+  .g-stat-card.blue::before   { background:var(--blue); }
+  .g-stat-card.green::before  { background:var(--green); }
+  .g-stat-card.orange::before { background:var(--orange); }
+  .g-stat-card.red::before    { background:var(--red); }
+  .g-stat-card:hover { transform:translateY(-2px); }
+  .g-stat-num { font-family:'Syne',sans-serif; font-weight:800; font-size:26px; margin-bottom:4px; }
+  .g-stat-card.blue   .g-stat-num { color:var(--blue); }
+  .g-stat-card.green  .g-stat-num { color:var(--green); }
+  .g-stat-card.orange .g-stat-num { color:var(--orange); }
+  .g-stat-card.red    .g-stat-num { color:var(--red); }
+  .g-stat-lbl { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; }
+
+  .tab-bar { display:flex; gap:4px; background:var(--navy3); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:24px; }
+  .tab-btn {
+    flex:1; padding:9px 16px; border-radius:9px; border:none; background:transparent;
+    color:var(--text2); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500;
+    cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .tab-btn.active { background:var(--blue); color:#fff; }
+  .tab-count { background:rgba(255,255,255,0.2); border-radius:10px; padding:1px 7px; font-size:11px; }
+  .tab-btn:not(.active) .tab-count { background:var(--navy5); color:var(--text3); }
+
+  .g-slot-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:24px; }
+  .g-slot-tile {
+    background:var(--navy3); border-radius:10px; padding:10px 6px; text-align:center;
+    border:1px solid var(--border); transition:all .2s;
+    min-height:72px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    position:relative; overflow:hidden;
+  }
+  .g-slot-tile::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .g-slot-tile.available::before { background:var(--green); }
+  .g-slot-tile.pending { border-color:rgba(249,115,22,.4); cursor:pointer; }
+  .g-slot-tile.pending::before { background:var(--orange); animation:gGlow .8s ease infinite alternate; }
+  @keyframes gGlow { from{opacity:.6;} to{opacity:1;} }
+  .g-slot-tile.pending:hover { background:var(--orange-soft); transform:translateY(-2px); box-shadow:0 4px 20px rgba(249,115,22,.2); }
+  .g-slot-tile.reserved::before { background:var(--red); }
+  .g-slot-tile.reserved { border-color:rgba(239,68,68,.3); }
+  .g-slot-id  { font-family:'Syne',sans-serif; font-weight:700; font-size:12px; color:var(--text); }
+  .g-slot-dot { width:7px; height:7px; border-radius:50%; }
+  .g-slot-tile.available .g-slot-dot { background:var(--green); }
+  .g-slot-tile.pending   .g-slot-dot { background:var(--orange); animation:blink 1s infinite; }
+  .g-slot-tile.reserved  .g-slot-dot { background:var(--red); }
+  .g-slot-vehicle { font-size:13px; }
+  .g-slot-tap { font-size:9px; color:var(--orange); font-weight:500; }
+
+  .pending-card {
+    background:var(--navy3); border:1px solid var(--border2); border-radius:16px; padding:18px 20px; margin-bottom:12px;
+    display:flex; align-items:center; gap:16px; transition:all .2s; position:relative; overflow:hidden;
+    border-left:3px solid var(--orange);
+  }
+  .slot-badge {
+    min-width:52px; height:52px; border-radius:12px;
+    background:var(--orange-soft); border:1px solid var(--orange);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:12px; color:var(--orange); text-align:center; line-height:1.2;
+  }
+  .pending-info { flex:1; }
+  .pending-name  { font-family:'Syne',sans-serif; font-weight:600; font-size:14px; color:var(--text); margin-bottom:3px; }
+  .pending-meta  { font-size:12px; color:var(--text2); margin-bottom:5px; }
+  .pending-timer { font-size:12px; }
+  .pending-timer.urgent { color:var(--red); font-weight:600; }
+  .pending-timer.normal { color:var(--orange); }
+  .btn-reserve {
+    padding:9px 18px; border-radius:9px; background:var(--green); color:#fff;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:13px;
+    border:none; cursor:pointer; transition:all .2s; white-space:nowrap;
+  }
+  .btn-reserve:hover { background:#16a34a; transform:translateY(-1px); }
+
+  .reserved-card {
+    background:var(--navy3); border:1px solid var(--border); border-radius:16px; padding:16px 20px; margin-bottom:10px;
+    display:flex; align-items:center; gap:14px; border-left:3px solid var(--red);
+  }
+  .reserved-badge {
+    min-width:48px; height:48px; border-radius:10px; background:var(--red-soft); border:1px solid var(--red);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:11px; color:var(--red); text-align:center;
+  }
+  .btn-release {
+    padding:7px 14px; border-radius:8px; background:transparent; border:1px solid var(--red);
+    color:var(--red); font-size:12px; cursor:pointer; transition:all .2s;
+  }
+  .btn-release:hover { background:var(--red-soft); }
+
+  .g-empty { text-align:center; padding:60px 20px; }
+  .g-empty-icon { font-size:48px; margin-bottom:14px; }
+  .g-empty h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:18px; color:var(--text); margin-bottom:8px; }
+  .g-empty p  { font-size:14px; color:var(--text2); }
+
+  .g-legend { display:flex; gap:16px; margin-bottom:14px; flex-wrap:wrap; }
+  .g-legend-item { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text2); }
+  .g-legend-dot  { width:10px; height:10px; border-radius:2px; }
+
+  @media(max-width:480px) {
+    .login-card { padding:28px 20px; }
+    .fields-grid { grid-template-columns:1fr; }
+    .fields-grid .field.full { grid-column:1; }
+    .slot-grid,.slot-picker-grid,.g-slot-grid { grid-template-columns:repeat(4,1fr); }
+    .stats-row  { grid-template-columns:1fr 1fr; }
+    .g-stats-grid { grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Connecting to SpotOra...</div>
+</div>
+
+<!-- GUARD CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3>Confirm Reservation</h3>
+    <p>Mark this slot as reserved for the following student?</p>
+    <div class="modal-slot-id" id="modalSlotId">A01</div>
+    <div class="modal-rows" id="modalRows"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-modal-confirm" onclick="confirmReserve()">Mark Reserved ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="modal-overlay" id="registerModal">
+  <div class="modal">
+    <h3>Create Account</h3>
+    <p>Register with your MIT AOE details</p>
+    <div class="error-msg" id="regError"></div>
+    <div class="fields-grid">
+      <div class="field"><label>Full Name</label><input type="text" id="regName" placeholder="Rahul Sharma"/></div>
+      <div class="field"><label>College ID</label><input type="text" id="regCollegeId" placeholder="MITAOE2024001"/></div>
+      <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="rahul@mitaoe.ac.in"/></div>
+      <div class="field"><label>Phone</label><input type="tel" id="regPhone" placeholder="9876543210"/></div>
+      <div class="field"><label>Vehicle Number</label><input type="text" id="regVehicle" placeholder="MH12AB1234"/></div>
+      <div class="field"><label>Vehicle Type</label>
+        <select id="regVtype"><option>Two-Wheeler</option><option>Four-Wheeler</option></select>
+      </div>
+      <div class="field full"><label>Password</label><input type="password" id="regPass" placeholder="Create a strong password"/></div>
+    </div>
+    <button class="btn-primary bp-s" onclick="doRegister()">Create Account</button>
+    <p class="login-note" style="margin-top:12px;"><a href="#" onclick="hideRegister()">← Back to Login</a></p>
+  </div>
+</div>
+
+<!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
+<div class="screen active" id="screen-login">
+  <nav class="nav-s" id="loginNav">
+    <div class="nav-brand">
+      <div class="nav-logo nl-s" id="loginNavLogo">S</div>
+      <div>
+        <div class="nav-title">SpotOra</div>
+        <div class="nav-sub">Smart Campus Parking</div>
+      </div>
+    </div>
+  </nav>
+  <div class="login-hero">
+    <div class="login-bg-pattern"></div>
+    <div class="login-card" id="loginCard">
+      <div class="login-brand">
+        <div class="login-brand-logo lbl-s" id="loginLogo">🅿️</div>
+        <h1>SpotOra</h1>
+        <p>Smart Campus Parking System</p>
+      </div>
+
+      <div class="role-toggle">
+        <button class="role-btn rb-s active" id="roleStudent" onclick="setRole('student')">🎓 Student</button>
+        <button class="role-btn rb-g"        id="roleGuard"   onclick="setRole('guard')">🛡️ Guard</button>
+      </div>
+
+      <div class="error-msg" id="loginError"></div>
+
+      <div id="studentFields">
+        <div class="field"><label>College ID</label><input type="text" id="sLoginId" placeholder="e.g. MITAOE2024001"/></div>
+        <div class="field"><label>Password</label><input type="password" id="sLoginPass" placeholder="Enter your password"/></div>
+        <button class="btn-primary bp-s" onclick="doStudentLogin()">Sign In as Student</button>
+        <p class="login-note">
+          Don't have an account? <a href="#" onclick="showRegister()">Register here</a><br/>
+          <span style="color:var(--text3);margin-top:8px;display:block;">Your data is securely stored.</span>
+        </p>
+      </div>
+
+      <div id="guardFields" style="display:none;">
+        <div class="field"><label>Guard ID</label><input type="text" id="gLoginId" placeholder="e.g. GUARD001"/></div>
+        <div class="field"><label>Password</label><input type="password" id="gLoginPass" placeholder="Enter password"/></div>
+        <button class="btn-primary bp-g" onclick="doGuardLogin()">Sign In as Guard</button>
+        <div class="default-creds">
+          <strong>Default credentials:</strong><br/>
+          Guard ID: <code>GUARD001</code> &nbsp;|&nbsp; Password: <code>guard123</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ STUDENT APP ═══════════════ -->
+<div class="screen" id="screen-student">
+  <nav class="nav-s">
+    <div class="nav-brand">
+      <div class="nav-logo nl-s">S</div>
+      <div><div class="nav-title">SpotOra</div><div class="nav-sub">Student Portal</div></div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-user"><span id="sNavName"></span><div class="avatar av-s" id="sNavAvatar">R</div></div>
+      <button class="btn-logout" onclick="doStudentLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="app-container">
+    <!-- DASHBOARD -->
+    <div class="s-page active" id="s-page-dashboard">
+      <div class="page-header">
+        <h2>Parking Dashboard</h2>
+        <p id="sDashGreeting">Welcome back! Here's today's parking status.</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card green"><div class="stat-num" id="sStatAvail">—</div><div class="stat-label">Available</div></div>
+        <div class="stat-card orange"><div class="stat-num" id="sStatPend">—</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card red"><div class="stat-num" id="sStatRes">—</div><div class="stat-label">Reserved</div></div>
+      </div>
+      <div class="section-title">Live Slot Map</div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot green"></div>Available</div>
+        <div class="legend-item"><div class="legend-dot orange"></div>Pending</div>
+        <div class="legend-item"><div class="legend-dot red"></div>Reserved</div>
+        <div class="legend-item" style="color:var(--gold);"><span style="font-size:10px;border:1px solid var(--gold);border-radius:3px;padding:0 4px;margin-right:4px;">★</span>Your Slot</div>
+      </div>
+      <div class="slot-grid" id="sDashGrid"></div>
+      <div class="section-title">Parking Area Info</div>
+      <div class="info-box">
+        <div class="info-box-grid">
+          <div class="info-box-item"><span>Location</span><span style="font-weight:500;">MIT AOE Main Campus</span></div>
+          <div class="info-box-item"><span>Total Slots</span><span style="font-weight:500;">20 Slots</span></div>
+          <div class="info-box-item"><span>Operating Hours</span><span style="font-weight:500;">7:00 AM – 9:00 PM</span></div>
+          <div class="info-box-item"><span>Booking Window</span><span style="font-weight:500;">10 min to arrive</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOK SLOT -->
+    <div class="s-page" id="s-page-book">
+      <div class="page-header"><h2>Book a Slot</h2><p>Select a slot and confirm your booking below.</p></div>
+      <div class="booking-card">
+        <h3>Your Details (auto-filled)</h3>
+        <div class="fields-grid">
+          <div class="field"><label>Full Name</label><input type="text" id="bName" readonly style="opacity:.7;cursor:not-allowed;"/></div>
+          <div class="field"><label>College ID</label><input type="text" id="bCollegeId" readonly style="opacity:.7;cursor:not-allowed;"/></div>
+          <div class="field"><label>Vehicle Number</label><input type="text" id="bVehicle" readonly style="opacity:.7;cursor:not-allowed;"/></div>
+          <div class="field"><label>Vehicle Type</label><input type="text" id="bVtype" readonly style="opacity:.7;cursor:not-allowed;"/></div>
+        </div>
+      </div>
+      <div class="booking-card">
+        <h3>Select Available Slot</h3>
+        <div class="slot-picker-grid" id="sBookGrid"></div>
+        <div class="confirm-strip" id="confirmStrip"><span id="confirmStripText">Slot selected</span></div>
+        <div id="bookAlert"></div>
+        <button class="btn-confirm" onclick="confirmBooking()">Confirm Booking</button>
+      </div>
+    </div>
+
+    <!-- MY BOOKING -->
+    <div class="s-page" id="s-page-mybooking">
+      <div class="page-header"><h2>My Booking</h2><p>Your active parking reservation.</p></div>
+      <div id="sNoBookingState">
+        <div class="empty-state">
+          <div class="empty-icon">🅿️</div>
+          <h3>No Active Booking</h3>
+          <p>You haven't booked a parking slot yet. Reserve one now!</p>
+          <button class="btn-go-book" onclick="sSwitchPage('book')">Book a Slot</button>
+        </div>
+      </div>
+      <div id="sActiveBookingState" style="display:none;">
+        <div id="sStatusBanner"></div>
+        <div class="timer-section" id="sTimerSection" style="display:none;">
+          <div style="background:var(--navy3);border:1px solid var(--border);border-radius:14px;padding:18px;">
+            <div class="timer-label">
+              <span>Time remaining to arrive</span>
+              <span class="timer-countdown" id="sTimerDisplay">10:00</span>
+            </div>
+            <div class="timer-track"><div class="timer-fill" id="sTimerFill" style="width:100%;"></div></div>
+          </div>
+        </div>
+        <div class="receipt-card">
+          <div class="receipt-header">
+            <div class="receipt-slot-badge" id="sReceiptSlotBadge">A01</div>
+            <div><div class="receipt-title">Parking Confirmed</div><div class="receipt-sub">SpotOra · MIT AOE Campus</div></div>
+          </div>
+          <div class="receipt-rows" id="sReceiptRows"></div>
+        </div>
+        <button class="btn-cancel" onclick="cancelBooking()">Cancel Booking</button>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="s-page" id="s-page-profile">
+      <div class="page-header"><h2>My Profile</h2></div>
+      <div class="profile-card">
+        <div class="profile-avatar" id="sProfileAvatar">R</div>
+        <div class="profile-name"   id="sProfileName">—</div>
+        <div class="profile-id"     id="sProfileId">—</div>
+        <div class="profile-badge">MIT AOE Student</div>
+      </div>
+      <div class="booking-card">
+        <h3>Account Information</h3>
+        <ul class="info-list" id="sProfileList"></ul>
+      </div>
+      <button class="btn-cancel" style="margin-top:8px;" onclick="doStudentLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="bnav-item active" onclick="sSwitchPage('dashboard')" id="bnav-dashboard"><span class="bnav-icon">🏠</span><span class="bnav-label">Dashboard</span></button>
+    <button class="bnav-item"        onclick="sSwitchPage('book')"      id="bnav-book"><span class="bnav-icon">➕</span><span class="bnav-label">Book</span></button>
+    <button class="bnav-item"        onclick="sSwitchPage('mybooking')" id="bnav-mybooking"><span class="bnav-icon">🎫</span><span class="bnav-label">My Booking</span></button>
+    <button class="bnav-item"        onclick="sSwitchPage('profile')"   id="bnav-profile"><span class="bnav-icon">👤</span><span class="bnav-label">Profile</span></button>
+  </div>
+</div>
+
+<!-- ═══════════════ GUARD APP ═══════════════ -->
+<div class="screen" id="screen-guard">
+  <nav class="nav-g">
+    <div class="nav-brand">
+      <div class="nav-logo nl-g">🛡</div>
+      <div><div class="nav-title">SpotOra</div><div class="nav-sub">Security Guard Portal</div></div>
+    </div>
+    <div class="nav-right">
+      <div class="live-badge"><div class="live-dot"></div>Live</div>
+      <button class="btn-logout" onclick="doGuardLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="g-app-container">
+    <div class="g-stats-grid">
+      <div class="g-stat-card blue"><div class="g-stat-num">20</div><div class="g-stat-lbl">Total Slots</div></div>
+      <div class="g-stat-card green"><div class="g-stat-num" id="gStatAvail">—</div><div class="g-stat-lbl">Available</div></div>
+      <div class="g-stat-card orange"><div class="g-stat-num" id="gStatPend">—</div><div class="g-stat-lbl">Pending</div></div>
+      <div class="g-stat-card red"><div class="g-stat-num" id="gStatRes">—</div><div class="g-stat-lbl">Reserved</div></div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="gSwitchTab('overview')"  id="gtab-overview">🅿️ Slot Overview</button>
+      <button class="tab-btn"        onclick="gSwitchTab('pending')"   id="gtab-pending">⏳ Pending <span class="tab-count" id="gPendingCount">0</span></button>
+      <button class="tab-btn"        onclick="gSwitchTab('reserved')"  id="gtab-reserved">✅ Reserved <span class="tab-count" id="gReservedCount">0</span></button>
+    </div>
+
+    <div id="gtab-overview-content">
+      <div class="section-title">Live Parking Map</div>
+      <div class="g-legend">
+        <div class="g-legend-item"><div class="g-legend-dot" style="background:var(--green);"></div>Available</div>
+        <div class="g-legend-item"><div class="g-legend-dot" style="background:var(--orange);"></div>Pending (tap to reserve)</div>
+        <div class="g-legend-item"><div class="g-legend-dot" style="background:var(--red);"></div>Reserved</div>
+      </div>
+      <div class="g-slot-grid" id="gOverviewGrid"></div>
+    </div>
+
+    <div id="gtab-pending-content"  style="display:none;"><div id="gPendingList"></div></div>
+    <div id="gtab-reserved-content" style="display:none;"><div id="gReservedList"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCelnCKU9JBCz1CUf_NviiW1KWUXB8Za3M",
+  authDomain: "mitaoe-parking.firebaseapp.com",
+  projectId: "mitaoe-parking",
+  storageBucket: "mitaoe-parking.firebasestorage.app",
+  messagingSenderId: "875899575922",
+  appId: "1:875899575922:web:1cd7ec6adc6f0edfa92ceb",
+  measurementId: "G-ER04PZ7NKN"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+const TOTAL   = 20;
+const TIMEOUT = 600;
+
+let slotsData          = {};
+let currentUser        = null;
+let selectedSlot       = null;
+let timerInterval      = null;
+let currentGuard       = null;
+let pendingSlotRes     = null;
+let currentGuardTab    = 'overview';
+
+const defaultGuards = {
+  'GUARD001': { name:'Ramesh Kumar', badge:'RK', password:'guard123', shift:'Morning (7AM–3PM)' },
+  'GUARD002': { name:'Suresh Patil', badge:'SP', password:'guard456', shift:'Evening (3PM–9PM)' }
+};
+
+window.addEventListener('load', async () => {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  initSlotsListener();
+  await ensureGuardsExist();
+  const su = localStorage.getItem('spotora_user');
+  const sg = localStorage.getItem('spotora_guard');
+  if (su) { currentUser = JSON.parse(su); showStudentApp(); }
+  else if (sg) { currentGuard = JSON.parse(sg); showGuardApp(); }
+});
+
+async function ensureGuardsExist() {
+  for (const [id,data] of Object.entries(defaultGuards)) {
+    const snap = await get(ref(db,'guards/'+id));
+    if (!snap.exists()) await set(ref(db,'guards/'+id), data);
+  }
+}
+
+function initSlotsListener() {
+  onValue(ref(db,'slots'), snap => {
+    slotsData = snap.val() || {};
+    if (!slotsData || Object.keys(slotsData).length===0) initDefaultSlots();
+    else {
+      renderSDashGrid(); renderSBookGrid(); updateSStats(); checkMyBooking();
+      renderGAll(); checkExpiredSlots();
+    }
+  });
+}
+
+async function initDefaultSlots() {
+  const batch = {};
+  for (let i=1;i<=TOTAL;i++) {
+    const id = 'A'+String(i).padStart(2,'0');
+    batch[id] = {status:'available',student:null,college_id:null,vehicle:null,vehicle_type:null,booked_at:null};
+  }
+  await set(ref(db,'slots'),batch);
+}
+
+async function checkExpiredSlots() {
+  const now = Date.now();
+  for (const [id,slot] of Object.entries(slotsData)) {
+    if (slot.status==='pending' && slot.booked_at) {
+      if (Math.floor((now-slot.booked_at)/1000) >= TIMEOUT)
+        await update(ref(db,'slots/'+id),{status:'available',student:null,college_id:null,vehicle:null,vehicle_type:null,booked_at:null});
+    }
+  }
+}
+
+/* ── ROLE TOGGLE ── */
+window.setRole = (role) => {
+  const isS = role==='student';
+  document.getElementById('studentFields').style.display = isS?'block':'none';
+  document.getElementById('guardFields').style.display   = isS?'none':'block';
+  document.getElementById('loginError').classList.remove('show');
+  document.getElementById('roleStudent').className = 'role-btn rb-s'+(isS?' active':'');
+  document.getElementById('roleGuard').className   = 'role-btn rb-g'+(!isS?' active':'');
+  const logo = document.getElementById('loginLogo');
+  logo.className = `login-brand-logo ${isS?'lbl-s':'lbl-g'}`;
+  logo.textContent = isS?'🅿️':'🛡️';
+  const nl = document.getElementById('loginNavLogo');
+  nl.className = `nav-logo ${isS?'nl-s':'nl-g'}`;
+  nl.textContent = isS?'S':'G';
+  document.getElementById('loginNav').className = isS?'nav-s':'nav-g';
+  document.getElementById('loginCard').className = isS?'login-card':'login-card guard-mode';
+};
+
+/* ── STUDENT AUTH ── */
+window.doStudentLogin = async () => {
+  const id   = document.getElementById('sLoginId').value.trim();
+  const pass = document.getElementById('sLoginPass').value.trim();
+  const err  = document.getElementById('loginError');
+  err.classList.remove('show');
+  if (!id||!pass){err.textContent='Please fill all fields.';err.classList.add('show');return;}
+  try {
+    const snap = await get(ref(db,'students/'+id));
+    if (!snap.exists()){err.textContent='College ID not found. Please register.';err.classList.add('show');return;}
+    const stu = snap.val();
+    if (stu.password!==pass){err.textContent='Incorrect password.';err.classList.add('show');return;}
+    currentUser = {...stu, college_id:id};
+    localStorage.setItem('spotora_user', JSON.stringify(currentUser));
+    showStudentApp();
+  } catch(e){err.textContent='Connection error.';err.classList.add('show');}
+};
+
+window.doStudentLogout = () => {
+  localStorage.removeItem('spotora_user');
+  currentUser=null; selectedSlot=null;
+  if(timerInterval) clearInterval(timerInterval);
+  document.getElementById('screen-student').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  setRole('student'); sSwitchPage('dashboard');
+};
+
+function showStudentApp() {
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-guard').classList.remove('active');
+  document.getElementById('screen-student').classList.add('active');
+  document.getElementById('sNavName').textContent   = currentUser.name.split(' ')[0];
+  document.getElementById('sNavAvatar').textContent  = currentUser.name[0].toUpperCase();
+  document.getElementById('sDashGreeting').textContent = 'Welcome, '+currentUser.name.split(' ')[0]+'! Here\'s today\'s parking status.';
+  document.getElementById('bName').value      = currentUser.name;
+  document.getElementById('bCollegeId').value = currentUser.college_id;
+  document.getElementById('bVehicle').value   = currentUser.vehicle;
+  document.getElementById('bVtype').value     = currentUser.vehicle_type;
+  renderSProfile();
+}
+
+window.showRegister = () => document.getElementById('registerModal').classList.add('open');
+window.hideRegister = () => document.getElementById('registerModal').classList.remove('open');
+
+window.doRegister = async () => {
+  const name=document.getElementById('regName').value.trim();
+  const cid=document.getElementById('regCollegeId').value.trim().toUpperCase();
+  const email=document.getElementById('regEmail').value.trim();
+  const phone=document.getElementById('regPhone').value.trim();
+  const vehicle=document.getElementById('regVehicle').value.trim().toUpperCase();
+  const vtype=document.getElementById('regVtype').value;
+  const pass=document.getElementById('regPass').value.trim();
+  const err=document.getElementById('regError');
+  err.classList.remove('show');
+  if(!name||!cid||!email||!phone||!vehicle||!pass){err.textContent='Please fill all fields.';err.classList.add('show');return;}
+  try {
+    if((await get(ref(db,'students/'+cid))).exists()){err.textContent='College ID already registered.';err.classList.add('show');return;}
+    await set(ref(db,'students/'+cid),{name,email,phone,vehicle,vehicle_type:vtype,password:pass});
+    currentUser={name,email,phone,vehicle,vehicle_type:vtype,college_id:cid};
+    localStorage.setItem('spotora_user',JSON.stringify(currentUser));
+    hideRegister(); showStudentApp(); showToast('Account created! Welcome '+name,'success');
+  } catch(e){err.textContent='Registration failed.';err.classList.add('show');}
+};
+
+/* ── GUARD AUTH ── */
+window.doGuardLogin = async () => {
+  const id   = document.getElementById('gLoginId').value.trim().toUpperCase();
+  const pass = document.getElementById('gLoginPass').value.trim();
+  const err  = document.getElementById('loginError');
+  err.classList.remove('show');
+  if(!id||!pass){err.textContent='Please fill all fields.';err.classList.add('show');return;}
+  try {
+    const snap = await get(ref(db,'guards/'+id));
+    if(!snap.exists()){err.textContent='Guard ID not found.';err.classList.add('show');return;}
+    const g = snap.val();
+    if(g.password!==pass){err.textContent='Incorrect password.';err.classList.add('show');return;}
+    currentGuard={...g,guard_id:id};
+    localStorage.setItem('spotora_guard',JSON.stringify(currentGuard));
+    showGuardApp();
+  } catch(e){err.textContent='Connection error.';err.classList.add('show');}
+};
+
+window.doGuardLogout = () => {
+  localStorage.removeItem('spotora_guard'); currentGuard=null;
+  document.getElementById('screen-guard').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  setRole('guard');
+};
+
+function showGuardApp() {
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-student').classList.remove('active');
+  document.getElementById('screen-guard').classList.add('active');
+}
+
+/* ── STUDENT RENDERS ── */
+function renderSDashGrid() {
+  const grid = document.getElementById('sDashGrid');
+  if(!grid) return;
+  grid.innerHTML='';
+  for(let i=1;i<=TOTAL;i++){
+    const id=`A${String(i).padStart(2,'0')}`;
+    const slot=slotsData[id]||{status:'available'};
+    const isMine=currentUser&&slot.college_id===currentUser.college_id;
+    const cls=isMine?'mine':slot.status;
+    const icon=slot.vehicle_type==='Four-Wheeler'?'🚗':(slot.status==='available'?'':'🛵');
+    const div=document.createElement('div');
+    div.className=`slot-tile ${cls}`;
+    div.innerHTML=`<div class="slot-id">${id}</div><div class="slot-status-dot"></div>${icon?`<div style="font-size:13px;">${icon}</div>`:''}`;
+    div.title=isMine?'Your Slot':(slot.student||slot.status);
+    grid.appendChild(div);
+  }
+}
+
+function renderSBookGrid() {
+  const grid=document.getElementById('sBookGrid');
+  if(!grid) return;
+  grid.innerHTML='';
+  for(let i=1;i<=TOTAL;i++){
+    const id=`A${String(i).padStart(2,'0')}`;
+    const slot=slotsData[id]||{status:'available'};
+    const isAvail=slot.status==='available';
+    const isSel=selectedSlot===id;
+    const div=document.createElement('div');
+    div.className=`slot-pick-tile ${isAvail?'available':'taken'}${isSel?' selected':''}`;
+    div.innerHTML=`<div class="slot-pick-id">${id}</div><div class="slot-pick-status">${isAvail?'Free':slot.status}</div>`;
+    if(isAvail) div.onclick=()=>selectSlot(id);
+    grid.appendChild(div);
+  }
+  const strip=document.getElementById('confirmStrip');
+  if(selectedSlot){strip.classList.add('show');document.getElementById('confirmStripText').textContent=`Selected: Slot ${selectedSlot}`;}
+  else strip.classList.remove('show');
+}
+
+function updateSStats(){
+  let a=0,p=0,r=0;
+  Object.values(slotsData).forEach(s=>{if(s.status==='available')a++;else if(s.status==='pending')p++;else if(s.status==='reserved')r++;});
+  document.getElementById('sStatAvail').textContent=a;
+  document.getElementById('sStatPend').textContent=p;
+  document.getElementById('sStatRes').textContent=r;
+}
+
+function selectSlot(id){selectedSlot=id;renderSBookGrid();}
+
+window.confirmBooking = async () => {
+  if(!selectedSlot){showBookAlert('Please select a slot first.','warn');return;}
+  const slot=slotsData[selectedSlot];
+  if(!slot||slot.status!=='available'){showBookAlert('Slot no longer available!','error');selectedSlot=null;renderSBookGrid();return;}
+  if(!currentUser) return;
+  const existing=Object.values(slotsData).find(s=>s.college_id===currentUser.college_id&&(s.status==='pending'||s.status==='reserved'));
+  if(existing){showBookAlert('You already have an active booking!','warn');return;}
+  const booked_at=Date.now();
+  await update(ref(db,'slots/'+selectedSlot),{status:'pending',student:currentUser.name,college_id:currentUser.college_id,vehicle:currentUser.vehicle,vehicle_type:currentUser.vehicle_type,booked_at});
+  selectedSlot=null;
+  showToast('Slot booked! You have 10 minutes to arrive.','success');
+  sSwitchPage('mybooking');
+};
+
+window.cancelBooking = async () => {
+  if(!currentUser) return;
+  const mySlotId=findMySlot();
+  if(!mySlotId) return;
+  if(timerInterval) clearInterval(timerInterval);
+  await update(ref(db,'slots/'+mySlotId),{status:'available',student:null,college_id:null,vehicle:null,vehicle_type:null,booked_at:null});
+  showToast('Booking cancelled.','error');
+};
+
+function findMySlot(){
+  if(!currentUser) return null;
+  return Object.keys(slotsData).find(k=>slotsData[k].college_id===currentUser.college_id&&(slotsData[k].status==='pending'||slotsData[k].status==='reserved'));
+}
+
+function checkMyBooking(){
+  const mySlotId=findMySlot();
+  const noS=document.getElementById('sNoBookingState');
+  const actS=document.getElementById('sActiveBookingState');
+  if(!mySlotId){if(noS)noS.style.display='block';if(actS)actS.style.display='none';if(timerInterval){clearInterval(timerInterval);timerInterval=null;}return;}
+  if(noS)noS.style.display='none';if(actS)actS.style.display='block';
+  const slot=slotsData[mySlotId];
+  renderSReceipt(mySlotId,slot);
+  if(slot.status==='pending'){startSTimer(slot.booked_at);renderSStatusBanner('pending');}
+  else{if(timerInterval){clearInterval(timerInterval);timerInterval=null;}const ts=document.getElementById('sTimerSection');if(ts)ts.style.display='none';renderSStatusBanner('reserved');}
+}
+
+function renderSReceipt(slotId,slot){
+  const badge=document.getElementById('sReceiptSlotBadge');
+  if(badge) badge.textContent=slotId;
+  const rows=document.getElementById('sReceiptRows');
+  if(!rows) return;
+  const dt=slot.booked_at?new Date(slot.booked_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'—';
+  rows.innerHTML=`
+    <div class="receipt-row"><span class="receipt-key">Slot Number</span><span class="receipt-val">${slotId}</span></div>
+    <div class="receipt-row"><span class="receipt-key">Student</span><span class="receipt-val">${slot.student||'—'}</span></div>
+    <div class="receipt-row"><span class="receipt-key">College ID</span><span class="receipt-val">${slot.college_id||'—'}</span></div>
+    <div class="receipt-row"><span class="receipt-key">Vehicle</span><span class="receipt-val">${slot.vehicle||'—'}</span></div>
+    <div class="receipt-row"><span class="receipt-key">Vehicle Type</span><span class="receipt-val">${slot.vehicle_type||'—'}</span></div>
+    <div class="receipt-row"><span class="receipt-key">Booked At</span><span class="receipt-val">${dt}</span></div>
+    <div class="receipt-row"><span class="receipt-key">Status</span><span class="receipt-val" style="color:${slot.status==='reserved'?'var(--green)':'var(--orange)'};">${slot.status.charAt(0).toUpperCase()+slot.status.slice(1)}</span></div>
+  `;
+}
+
+function renderSStatusBanner(status){
+  const el=document.getElementById('sStatusBanner');if(!el)return;
+  const msgs={pending:{icon:'⏳',title:'Pending — On Your Way',desc:'Show this receipt to the security guard on arrival.'},reserved:{icon:'✅',title:"Reserved — You're Parked!",desc:'Your slot has been confirmed by the security guard.'},expired:{icon:'❌',title:'Booking Expired',desc:'You did not arrive in time. Please book again.'}};
+  const m=msgs[status];
+  el.innerHTML=`<div class="status-banner ${status}"><div class="status-icon">${m.icon}</div><div class="status-text"><h4>${m.title}</h4><p>${m.desc}</p></div></div>`;
+}
+
+function startSTimer(bookedAt){
+  if(timerInterval) clearInterval(timerInterval);
+  const ts=document.getElementById('sTimerSection');if(ts)ts.style.display='block';
+  function tick(){
+    const rem=Math.max(0,TIMEOUT-Math.floor((Date.now()-bookedAt)/1000));
+    const disp=document.getElementById('sTimerDisplay');
+    const fill=document.getElementById('sTimerFill');
+    if(disp)disp.textContent=`${Math.floor(rem/60)}:${String(rem%60).padStart(2,'0')}`;
+    if(fill){fill.style.width=(rem/TIMEOUT*100)+'%';fill.className='timer-fill'+(rem<120?' urgent':'');}
+    if(rem<=0){clearInterval(timerInterval);expireBooking();}
+  }
+  tick(); timerInterval=setInterval(tick,1000);
+}
+
+async function expireBooking(){
+  const mySlotId=findMySlot();if(!mySlotId)return;
+  const slot=slotsData[mySlotId];
+  if(slot&&slot.status==='pending'){
+    await update(ref(db,'slots/'+mySlotId),{status:'available',student:null,college_id:null,vehicle:null,vehicle_type:null,booked_at:null});
+    showToast('Time expired! Your slot has been released.','error');
+  }
+}
+
+function renderSProfile(){
+  if(!currentUser) return;
+  const a=document.getElementById('sProfileAvatar');
+  const n=document.getElementById('sProfileName');
+  const i=document.getElementById('sProfileId');
+  const l=document.getElementById('sProfileList');
+  if(a)a.textContent=currentUser.name[0].toUpperCase();
+  if(n)n.textContent=currentUser.name;
+  if(i)i.textContent=currentUser.college_id;
+  if(l)l.innerHTML=`
+    <li><span class="key">Email</span><span class="val">${currentUser.email||'—'}</span></li>
+    <li><span class="key">Phone</span><span class="val">${currentUser.phone||'—'}</span></li>
+    <li><span class="key">Vehicle</span><span class="val">${currentUser.vehicle||'—'}</span></li>
+    <li><span class="key">Vehicle Type</span><span class="val">${currentUser.vehicle_type||'—'}</span></li>
+    <li><span class="key">College ID</span><span class="val">${currentUser.college_id||'—'}</span></li>
+  `;
+}
+
+window.sSwitchPage = (page) => {
+  document.querySelectorAll('.s-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s-page-'+page).classList.add('active');
+  document.getElementById('bnav-'+page).classList.add('active');
+  if(page==='mybooking') checkMyBooking();
+  if(page==='book') renderSBookGrid();
+  if(page==='profile') renderSProfile();
+};
+
+function showBookAlert(msg,type){
+  const el=document.getElementById('bookAlert');
+  const c={warn:'background:var(--orange-soft);border-color:var(--orange);color:var(--orange)',error:'background:var(--red-soft);border-color:var(--red);color:var(--red)'};
+  el.innerHTML=`<div style="${c[type]};border:1px solid;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;">${msg}</div>`;
+  setTimeout(()=>el.innerHTML='',3000);
+}
+
+/* ── GUARD RENDERS ── */
+function renderGAll(){updateGStats();renderGOverviewGrid();if(currentGuardTab==='pending')renderGPendingList();if(currentGuardTab==='reserved')renderGReservedList();updateGTabCounts();}
+
+function updateGStats(){
+  let a=0,p=0,r=0;
+  Object.values(slotsData).forEach(s=>{if(s.status==='available')a++;else if(s.status==='pending')p++;else r++;});
+  document.getElementById('gStatAvail').textContent=a;
+  document.getElementById('gStatPend').textContent=p;
+  document.getElementById('gStatRes').textContent=r;
+}
+
+function updateGTabCounts(){
+  const p=Object.values(slotsData).filter(s=>s.status==='pending').length;
+  const r=Object.values(slotsData).filter(s=>s.status==='reserved').length;
+  document.getElementById('gPendingCount').textContent=p;
+  document.getElementById('gReservedCount').textContent=r;
+}
+
+function renderGOverviewGrid(){
+  const grid=document.getElementById('gOverviewGrid');if(!grid)return;
+  grid.innerHTML='';
+  for(let i=1;i<=TOTAL;i++){
+    const id=`A${String(i).padStart(2,'0')}`;
+    const slot=slotsData[id]||{status:'available'};
+    const div=document.createElement('div');
+    div.className=`g-slot-tile ${slot.status}`;
+    const vIcon=slot.vehicle_type==='Four-Wheeler'?'🚗':(slot.status!=='available'?'🛵':'');
+    div.innerHTML=`<div class="g-slot-id">${id}</div><div class="g-slot-dot"></div>${vIcon?`<div class="g-slot-vehicle">${vIcon}</div>`:''} ${slot.status==='pending'?`<div class="g-slot-tap">Tap</div>`:''}`;
+    if(slot.status==='pending') div.onclick=()=>openModal(id,slot);
+    grid.appendChild(div);
+  }
+}
+
+function renderGPendingList(){
+  const list=document.getElementById('gPendingList');if(!list)return;
+  const pending=Object.entries(slotsData).filter(([,s])=>s.status==='pending');
+  if(!pending.length){list.innerHTML=`<div class="g-empty"><div class="g-empty-icon">✅</div><h3>No Pending Arrivals</h3><p>All students have arrived or there are no active bookings.</p></div>`;return;}
+  list.innerHTML='';
+  pending.forEach(([id,slot])=>{
+    const card=document.createElement('div');card.className='pending-card';
+    const elapsed=slot.booked_at?Math.floor((Date.now()-slot.booked_at)/1000):0;
+    const rem=Math.max(0,TIMEOUT-elapsed);
+    const mins=Math.floor(rem/60);const secs=rem%60;
+    const tc=rem<120?'urgent':'normal';
+    const dt=slot.booked_at?new Date(slot.booked_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'—';
+    card.innerHTML=`
+      <div class="slot-badge">${id}</div>
+      <div class="pending-info">
+        <div class="pending-name">${slot.student||'—'}</div>
+        <div class="pending-meta">ID: ${slot.college_id||'—'} &nbsp;|&nbsp; ${slot.vehicle_type||''}: ${slot.vehicle||'—'}</div>
+        <div class="pending-timer ${tc}" id="ptimer-${id}">⏱ ${mins}:${String(secs).padStart(2,'0')} remaining &nbsp;|&nbsp; Booked at ${dt}</div>
+      </div>
+      <button class="btn-reserve" onclick="openModal('${id}',${JSON.stringify(slot).replace(/"/g,'&quot;')})">Mark Reserved</button>
+    `;
+    list.appendChild(card);
+  });
+  pending.forEach(([id,slot])=>{
+    setInterval(()=>{
+      const el=document.getElementById('ptimer-'+id);if(!el)return;
+      const r=Math.max(0,TIMEOUT-(slot.booked_at?Math.floor((Date.now()-slot.booked_at)/1000):0));
+      el.textContent=`⏱ ${Math.floor(r/60)}:${String(r%60).padStart(2,'0')} remaining`;
+      el.className=`pending-timer ${r<120?'urgent':'normal'}`;
+    },1000);
+  });
+}
+
+function renderGReservedList(){
+  const list=document.getElementById('gReservedList');if(!list)return;
+  const reserved=Object.entries(slotsData).filter(([,s])=>s.status==='reserved');
+  if(!reserved.length){list.innerHTML=`<div class="g-empty"><div class="g-empty-icon">🅿️</div><h3>No Reserved Slots</h3><p>No slots are currently reserved.</p></div>`;return;}
+  list.innerHTML='';
+  reserved.forEach(([id,slot])=>{
+    const card=document.createElement('div');card.className='reserved-card';
+    card.innerHTML=`
+      <div class="reserved-badge">${id}</div>
+      <div style="flex:1;">
+        <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:14px;color:var(--text);margin-bottom:3px;">${slot.student||'—'}</div>
+        <div style="font-size:12px;color:var(--text2);">ID: ${slot.college_id||'—'} &nbsp;|&nbsp; ${slot.vehicle_type||''}: ${slot.vehicle||'—'}</div>
+      </div>
+      <button class="btn-release" onclick="releaseSlot('${id}')">Release</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+window.openModal = (slotId,slot) => {
+  pendingSlotRes=slotId;
+  document.getElementById('modalSlotId').textContent=slotId;
+  const dt=slot.booked_at?new Date(slot.booked_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'—';
+  document.getElementById('modalRows').innerHTML=`
+    <div class="modal-row"><span class="modal-key">Student</span><span class="modal-val">${slot.student||'—'}</span></div>
+    <div class="modal-row"><span class="modal-key">College ID</span><span class="modal-val">${slot.college_id||'—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Vehicle</span><span class="modal-val">${slot.vehicle||'—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Type</span><span class="modal-val">${slot.vehicle_type||'—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Booked At</span><span class="modal-val">${dt}</span></div>
+  `;
+  document.getElementById('confirmModal').classList.add('open');
+};
+window.closeModal = () => {document.getElementById('confirmModal').classList.remove('open');pendingSlotRes=null;};
+window.confirmReserve = async () => {
+  if(!pendingSlotRes) return;
+  const slotId=pendingSlotRes; closeModal();
+  await update(ref(db,'slots/'+slotId),{status:'reserved'});
+  showToast(`Slot ${slotId} marked as reserved!`,'success');
+};
+window.releaseSlot = async (slotId) => {
+  await update(ref(db,'slots/'+slotId),{status:'available',student:null,college_id:null,vehicle:null,vehicle_type:null,booked_at:null});
+  showToast(`Slot ${slotId} released.`,'info');
+};
+
+window.gSwitchTab = (tab) => {
+  currentGuardTab=tab;
+  ['overview','pending','reserved'].forEach(t=>{
+    document.getElementById('gtab-'+t+'-content').style.display=t===tab?'block':'none';
+    document.getElementById('gtab-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='pending') renderGPendingList();
+  if(tab==='reserved') renderGReservedList();
+};
+
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+type;
+  setTimeout(()=>t.className='toast',3000);
+}
+</script>
+</body>
+</html>
